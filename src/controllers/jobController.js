@@ -68,8 +68,84 @@ const getSingleJob = async (req, res) => {
         })
     }
 }
+
+//update job which is done by the recruiter
+const updateJob = async(req, res) => {
+    try{
+        const { jobId } = req.params;
+
+        const job = await Job.findById(jobId);
+
+        if(!job){
+            return res.status(404).json({
+                message : "Job not found"
+            })
+        }
+
+        //check the owership
+        if(job.recruiter.toString() !== req.currentUser._id.toString()){
+            return res.status(403).json({
+                message : "Access Denied"
+            })
+        }
+
+        //update field
+        job.title = req.body.title || job.title;
+        job.company = req.body.company || job.company;
+        job.location = req.body.location || job.location;
+        job.description = req.body.description || job.description;
+        job.skills = req.body.skills || job.skills;
+
+        await job.save();
+
+        res.status(200).json({
+            message : "Job update successfully",
+            job
+        })
+    }catch(error){
+        res.status(500).json({
+            message : error.message
+        })
+    }
+}
+
+
+//Delete Job
+    const deleteJob = async (req, res) => {
+        try{
+            const { jobId } = req.params;
+
+            const job = await Job.findById(jobId);
+
+            if(!job){
+                return res.status(404).json({
+                    message : "Job not found"
+                })
+            }
+
+            if(job.recruiter.toString() !== req.currentUser._id.toString()){
+                return res.status(403).json({
+                    message : "Access denied"
+                })
+            }
+
+            //delete job 
+            await job.deleteOne();
+
+            res.status(200).json({
+                message : "Job deleted successfully"
+            })
+
+        }catch(error){
+            res.status(500).json({
+                message : error.message
+            })
+        }
+    }
 module.exports = {
     createJob,
     getAllJobs,
-    getSingleJob
+    getSingleJob,
+    updateJob,
+    deleteJob
 }
