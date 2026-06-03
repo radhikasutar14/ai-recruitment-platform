@@ -17,7 +17,7 @@ const applyJob = async (req , res) => {
 
         //check if already applied
         const alreadyApplied = await Application.findOne({      //prevent duplicate application
-            candidate : req.currentUser._id,
+            candidate : req.user._id,
             job : jobId
         });
 
@@ -29,7 +29,7 @@ const applyJob = async (req , res) => {
     
     //create application
     const application = await Application.create({
-        candidate : req.currentUser._id,
+        candidate : req.user._id,
         job : jobId
     });
 
@@ -59,7 +59,7 @@ const getJobApplications = async(req, res) => {
         }
 
     //recruiter can only view own jobs
-    if(job.recruiter.toString() !== req.currentUser._id.toString()){
+    if(job.recruiter.toString() !== req.user._id.toString()){
         return res.status(403).json({
             message : "Access denied",
         })
@@ -71,7 +71,7 @@ const getJobApplications = async(req, res) => {
     })
     .populate("candidate", "name email role")
     .populate("job", "title company");
-
+    
     res.status(200).json(applications)
     }catch(error){
         res.status(500).json({
@@ -89,7 +89,7 @@ const updateApplicationStatus = async (req, res) => {
 
         //valid statues
         const validStatuses = [
-            "pendig",
+            "pending",
             "shortlisted",
             "rejected"
         ];
@@ -112,7 +112,7 @@ const updateApplicationStatus = async (req, res) => {
         }
 
         //recruiter owernship check
-        if(application.job.recruiter.toString() !== req.currentUser._id.toString()){
+        if(application.job.recruiter.toString() !== req.user._id.toString()){
             return res.status(403).json({
                 message : "Access denied",
             })
@@ -120,6 +120,7 @@ const updateApplicationStatus = async (req, res) => {
 
         //updatestatus
         application.status = status;
+        await application.save();
 
         res.status(200).json({
             message : "Application status updated",
@@ -136,10 +137,12 @@ const updateApplicationStatus = async (req, res) => {
 const getMyApplicaton = async(req, res) => {
     try{
         const applications = await Application.find({       //find all application where logged in candidate have apply
-            candidate : req.currentUser._id
+            candidate : req.user._id
         }).populate("job","title company location")
 
-        res.status(200).json(applications)
+        const validApplication = applications.filter((application) => application.job !== null)
+
+        res.status(200).json(validApplication)
     }catch(error){
         res.status(500).json({
             message : error.message

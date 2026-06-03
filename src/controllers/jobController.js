@@ -1,5 +1,6 @@
 const { param } = require("../app");
 const Job = require("../models/Job");
+const Application = require("../models/Application");
 
 //create job
 const createJob = async(req ,res) => {
@@ -20,7 +21,7 @@ const createJob = async(req ,res) => {
             description,
             skills,
             salary,
-            recruiter : req.currentUser.id
+            recruiter : req.user._id
         });
         res.status(201).json({
             message : "Job created successfully",
@@ -32,16 +33,28 @@ const createJob = async(req ,res) => {
         })
     }
 };
-//get job
+//get job for recruiter
 const getAllJobs = async (req, res) => {
     try{
         const jobs = await Job.find()
                         .populate("recruiter","name email")
                         .sort({createdAt : -1});
 
+        const jobWithCount = await Promise.all(
+            jobs.map(async(job) => {
+                const applicantCount = await Application.countDocuments({
+                    job : job._id
+                });
+
+                return{
+                    ...job.toObject(),
+                    applicantCount
+                };
+            })
+        )
         res.status(200).json({
-            count : jobs.length,
-            jobs
+            count : jobWithCount.length,
+            jobs : jobWithCount
         })
     }catch(error){
         res.status(500).json({
@@ -83,7 +96,7 @@ const updateJob = async(req, res) => {
         }
 
         //check the owership
-        if(job.recruiter.toString() !== req.currentUser._id.toString()){
+        if(job.recruiter.toString() !== req.user._id.toString()){
             return res.status(403).json({
                 message : "Access Denied"
             })
@@ -123,7 +136,7 @@ const updateJob = async(req, res) => {
                 })
             }
 
-            if(job.recruiter.toString() !== req.currentUser._id.toString()){
+            if(job.recruiter.toString() !== req.user._id.toString()){
                 return res.status(403).json({
                     message : "Access denied"
                 })

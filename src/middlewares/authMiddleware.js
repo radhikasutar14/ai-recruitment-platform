@@ -21,7 +21,7 @@ const protect = async (req , res, next) => {      //create middleware function w
                     });
                 }
 
-            req.currentUser = user;    // store user data in request
+            req.user = user;    // store user data in request
 
             next();
       
@@ -51,7 +51,7 @@ const authorizeRole = (...roles) => {           //function which collects alll t
         //     })
         // }
 
-        if(!roles.includes(req.currentUser.role)){             //authorization logic validation
+        if(!roles.includes(req.user.role)){             //authorization logic validation
             return res.status(403).json({
                 message : "Access Denied"
             })
