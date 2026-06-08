@@ -42,8 +42,13 @@ const uploadResume  = async(req, res) => {
             folder : "resumes"                                              //cloudinary create folder "resume"
         });
         //save resume url in database
-        const user = await User.findById(req.currentUser._id);
-
+        const user = await User.findById(req.user._id);
+        
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
         user.resume = result.secure_url;
 
         await user.save();
@@ -62,8 +67,8 @@ const uploadResume  = async(req, res) => {
 //update profile
 const updateProfile = async (req, res)  => {
     try{
-        const user = await User.findById(req.currentUser._id);
-        console.log(req.currentUser);
+        const user = await User.findById(req.user._id);
+        console.log(req.user);
 
         if(!user){
             return res.status(404).json({
