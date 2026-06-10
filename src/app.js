@@ -9,7 +9,14 @@ const savedJobRoutes = require("./routes/savedJobRoutes")
 
 const app = express();
 
-app.use(cors());
+app.use(
+    cors({
+        origin: [
+            "http://localhost:5173",
+            "https://ai-recruitment-frontend-five.vercel.app/"
+        ]
+    })
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
@@ -17,8 +24,6 @@ app.use("/api/jobs",jobRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/users",userRoutes);
 app.use("/api/saved-jobs", savedJobRoutes)
-
-
 
 app.get("/",(req,res) => {
     res.send("API is running");

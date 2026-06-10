@@ -1,4 +1,3 @@
-const { param } = require("../app");
 const Job = require("../models/Job");
 const Application = require("../models/Application");
 
