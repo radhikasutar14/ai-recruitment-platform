@@ -36,7 +36,14 @@ const userSchema = new mongoose.Schema(
 
     experience: {
       type: String
-    }
+    },
+
+    parsedResume: {
+      rawText: String,
+      email: String,
+      phone: String,
+      skills: [String]
+   }
   },
   {
     timestamps: true,

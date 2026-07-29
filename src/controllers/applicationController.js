@@ -26,11 +26,25 @@ const applyJob = async (req , res) => {
                 message : "Already applied for this job"
             })
         }
-    
+    const {
+        name,
+        email,
+        phone,
+        skills,
+        experience,
+        coverLetter
+    } = req.body;
+
     //create application
     const application = await Application.create({
         candidate : req.user._id,
-        job : jobId
+        job : jobId,
+        name,
+        email,
+        phone,
+        skills,
+        experience,
+        coverLetter
     });
 
     res.status(201).json({
@@ -91,7 +105,8 @@ const updateApplicationStatus = async (req, res) => {
         const validStatuses = [
             "pending",
             "shortlisted",
-            "rejected"
+            "rejected",
+            "reviewed"
         ];
 
         if(!validStatuses.includes(status)){

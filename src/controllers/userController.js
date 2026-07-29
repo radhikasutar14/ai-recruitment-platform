@@ -1,5 +1,6 @@
 const cloudinary = require("../config/cloudinary");
 const User = require("../models/User");
+const parseResume = require("../services/resumeParserService");
 
 //get all users
 const getAllUsers = async (req, res) => {
@@ -30,7 +31,17 @@ const uploadResume  = async(req, res) => {
                 message : "No file uploaded"
             })
         }
+        const parsedData = await parseResume(req.file.buffer);
+            console.log("parsedData",parsedData)
 
+        //save resume url in database
+        const user = await User.findById(req.user._id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
         //convert butffer to base64
         const fileBase64 = req.file.buffer.toString("base64");              //cloudinary accepts proper format binary --> base64
 
@@ -41,21 +52,21 @@ const uploadResume  = async(req, res) => {
             resource_type : "raw",                                          //resumes are in PDF/Document not an image
             folder : "resumes"                                              //cloudinary create folder "resume"
         });
-        //save resume url in database
-        const user = await User.findById(req.user._id);
-        
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found"
-            });
-        }
-        user.resume = result.secure_url;
 
+        user.resume = result.secure_url;
+        user.parsedResume = parsedData;
+
+        //auto fill data by parsing resume
+        if (!user.skills || user.skills.length === 0) {
+            user.skills = parsedData.skills;
+        }
+        
         await user.save();
 
         res.status(200).json({
             message : "Resume Upload successfully",
             resumeUrl : result.secure_url,
+            parsedResume: parsedData
         });
 
     }catch(error){
